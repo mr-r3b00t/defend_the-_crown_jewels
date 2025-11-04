@@ -259,10 +259,6 @@
                 currentDefense = queue.shift();
                 currentTimeLeft = currentDefense.time;
                 updateQueue();
-                // If time is up soon, clamp
-                if (currentTimeLeft > timeLeft) {
-                    currentTimeLeft = timeLeft;
-                }
             }
         }
 
