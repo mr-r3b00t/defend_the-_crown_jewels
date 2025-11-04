@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crown Jewels Defense Planner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #8B0000;
+        }
+        #game-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        #sidebar {
+            width: 250px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #main-area {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #FF4500;
+        }
+        #budget {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .defense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #implementation-queue {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 4px;
+        }
+        .queue-item {
+            padding: 5px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+        #attack-phase {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        #room-visual {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .attack-log {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Defend the Crown Jewels!</h1>
+    <p style="text-align: center;">You have 1 minute to fortify the Tower of London exhibit room. Spend your £10,000 security budget wisely on defenses. Each defense takes time to install—one at a time. Total installation time and costs exceed your limits, so choose wisely! After time's up, the thief strikes!</p>
+
+    <div id="game-container">
+        <div id="sidebar">
+            <div id="timer">Time Left: 1:00</div>
+            <div id="budget">Budget: £10,000</div>
+            
+            <h3>Available Defenses</h3>
+            <div id="defenses-list">
+                <div class="defense-item">
+                    <span>Armed Guard (Door)</span>
+                    <span>Cost: £3,000 | Time: 45s</span>
+                    <button onclick="addToQueue('Armed Guard', 3000, 45)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Security Camera (Ceiling)</span>
+                    <span>Cost: £1,000 | Time: 15s</span>
+                    <button onclick="addToQueue('Security Camera', 1000, 15)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Laser Tripwire (Floor)</span>
+                    <span>Cost: £2,000 | Time: 30s</span>
+                    <button onclick="addToQueue('Laser Tripwire', 2000, 30)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Reinforced Door Lock</span>
+                    <span>Cost: £800 | Time: 10s</span>
+                    <button onclick="addToQueue('Reinforced Door Lock', 800, 10)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Motion Sensor Alarm</span>
+                    <span>Cost: £1,200 | Time: 20s</span>
+                    <button onclick="addToQueue('Motion Sensor Alarm', 1200, 20)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Glass Case Reinforcement</span>
+                    <span>Cost: £3,000 | Time: 60s</span>
+                    <button onclick="addToQueue('Glass Case Reinforcement', 3000, 60)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Staff Training</span>
+                    <span>Cost: £1,500 | Time: 25s</span>
+                    <button onclick="addToQueue('Staff Training', 1500, 25)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>CCTV Signs</span>
+                    <span>Cost: £300 | Time: 5s</span>
+                    <button onclick="addToQueue('CCTV Signs', 300, 5)">Install</button>
+                </div>
+                <div class="defense-item">
+                    <span>Policy Documents</span>
+                    <span>Cost: £2,000 | Time: 35s</span>
+                    <button onclick="addToQueue('Policy Documents', 2000, 35)">Install</button>
+                </div>
+            </div>
+
+            <div id="implementation-queue">
+                <h3>Implementation Queue</h3>
+                <div id="queue-items"></div>
+                <div>Current: <span id="current-defense">None</span> (<span id="current-time-left">0s</span>)</div>
+            </div>
+        </div>
+
+        <div id="main-area">
+            <div id="room-visual">
+                <p>🏰 The Exhibit Room 🏰</p>
+                <p>Entrances: Door (Main), Window (Side), Vent (Ceiling)</p>
+                <p>Jewels: 💎💎💎 (Cannot be moved)</p>
+                <p>Defenses will be placed automatically across entry points for simulation.</p>
+            </div>
+            <div id="status">Planning phase active. Choose defenses!</div>
+            <div id="attack-phase">
+                <h2>The Thief Attacks!</h2>
+                <div id="attack-log"></div>
+                <div id="result"></div>
+                <button onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let timeLeft = 60; // 1 minute in seconds
+        let budget = 10000;
+        let queue = []; // Array of {name, cost, time}
+        let currentDefense = null;
+        let currentTimeLeft = 0;
+        let gameTimer = null;
+        let isPlanning = true;
+        let installedDefenses = []; // Track what's installed for simulation
+
+        // Defense effectiveness scores (for simulation)
+        const defenseScores = {
+            'Armed Guard': 25,
+            'Security Camera': 15,
+            'Laser Tripwire': 20,
+            'Reinforced Door Lock': 10,
+            'Motion Sensor Alarm': 18,
+            'Glass Case Reinforcement': 30,
+            'Staff Training': 5,
+            'CCTV Signs': 0,
+            'Policy Documents': 0
+        };
+
+        // Update UI functions
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = `Time Left: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateBudget() {
+            document.getElementById('budget').textContent = `Budget: £${budget.toLocaleString()}`;
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const buttons = document.querySelectorAll('button[onclick*="addToQueue"]');
+            buttons.forEach(btn => {
+                const costMatch = btn.parentElement.querySelector('span:nth-child(2)').textContent.match(/£([\d,]+)/);
+                if (costMatch) {
+                    const cost = parseInt(costMatch[1].replace(/,/g, ''));
+                    btn.disabled = budget < cost;
+                }
+            });
+        }
+
+        function updateQueue() {
+            const queueDiv = document.getElementById('queue-items');
+            queueDiv.innerHTML = queue.map((def, index) => 
+                `<div class="queue-item">${def.name} (in ${index + 1} spot${index > 0 ? 's' : ''})</div>`
+            ).join('');
+            document.getElementById('current-defense').textContent = currentDefense ? currentDefense.name : 'None';
+            document.getElementById('current-time-left').textContent = currentTimeLeft + 's';
+        }
+
+        function addToQueue(name, cost, time) {
+            if (budget < cost) {
+                alert('Insufficient budget!');
+                return;
+            }
+            if (!isPlanning) return;
+            queue.push({name, cost, time});
+            budget -= cost;
+            updateBudget();
+            updateQueue();
+            startNextIfIdle();
+        }
+
+        function startNextIfIdle() {
+            if (currentDefense || queue.length === 0) return;
+            if (queue.length > 0) {
+                currentDefense = queue.shift();
+                currentTimeLeft = currentDefense.time;
+                updateQueue();
+                // If time is up soon, clamp
+                if (currentTimeLeft > timeLeft) {
+                    currentTimeLeft = timeLeft;
+                }
+            }
+        }
+
+        function tick() {
+            if (!isPlanning) return;
+
+            timeLeft--;
+            updateTimer();
+
+            if (currentTimeLeft > 0) {
+                currentTimeLeft--;
+                if (currentTimeLeft === 0) {
+                    // Defense installed
+                    installedDefenses.push(currentDefense.name);
+                    currentDefense = null;
+                    startNextIfIdle();
+                }
+            }
+
+            if (timeLeft <= 0) {
+                endPlanning();
+            }
+        }
+
+        function endPlanning() {
+            isPlanning = false;
+            clearInterval(gameTimer);
+            document.getElementById('status').textContent = 'Planning over! Thief incoming...';
+            document.getElementById('defenses-list').style.display = 'none';
+            document.getElementById('implementation-queue').style.display = 'none';
+            document.getElementById('attack-phase').style.display = 'block';
+            simulateAttack();
+        }
+
+        function simulateAttack() {
+            const logDiv = document.getElementById('attack-log');
+            const resultDiv = document.getElementById('result');
+            let totalDefense = installedDefenses.reduce((sum, def) => sum + (defenseScores[def] || 0), 0);
+            let thiefSkill = 95; // Base thief skill
+            let logs = [];
+            let stolen = false;
+
+            if (totalDefense === 0) {
+                stolen = true;
+                logs.push('No defenses installed! The thief easily steals the Crown Jewels.');
+            } else {
+                // Simple simulation: Thief tries 3 paths
+                const paths = ['Main Door', 'Side Window', 'Ceiling Vent'];
+                paths.forEach((path) => {
+                    let pathDifficulty = Math.floor(Math.random() * 30) + 20; // Random base difficulty
+                    let pathDefense = totalDefense; // Total defense applies to all paths
+                    let successChance = Math.max(0, thiefSkill - pathDefense - pathDifficulty);
+                    let attempt = Math.random() * 100 < successChance;
+                    logs.push(`Thief tries ${path}: ${attempt ? 'Breaks through!' : 'Stopped by defenses!'} (Defense: ${Math.round(pathDefense)})`);
+                    if (attempt) stolen = true;
+                });
+            }
+
+            logDiv.innerHTML = logs.map(log => `<div class="attack-log">${log}</div>`).join('');
+            resultDiv.innerHTML = stolen ? 
+                '<h3 style="color: red;">💔 Failure! The Crown Jewels are stolen!</h3>' :
+                '<h3 style="color: green;">🏆 Success! The jewels are safe!</h3>';
+            resultDiv.innerHTML += `<p>Total Defense Score: ${totalDefense}</p>`;
+        }
+
+        function resetGame() {
+            timeLeft = 60;
+            budget = 10000;
+            queue = [];
+            currentDefense = null;
+            currentTimeLeft = 0;
+            installedDefenses = [];
+            isPlanning = true;
+            document.getElementById('defenses-list').style.display = 'block';
+            document.getElementById('implementation-queue').style.display = 'block';
+            document.getElementById('attack-phase').style.display = 'none';
+            document.getElementById('status').textContent = 'Planning phase active. Choose defenses!';
+            updateTimer();
+            updateBudget();
+            updateQueue();
+            clearInterval(gameTimer);
+            gameTimer = setInterval(tick, 1000);
+        }
+
+        // Start the game
+        updateTimer();
+        updateBudget();
+        updateQueue();
+        gameTimer = setInterval(tick, 1000);
+    </script>
+</body>
+</html>
